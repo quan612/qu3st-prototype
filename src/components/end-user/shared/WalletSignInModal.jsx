@@ -11,11 +11,12 @@ const CONNECTABLE = 1
 const AUTHENTICATING = 2
 const AUTHENTICATED = 3
 const ERROR = 4
+const WALLETCONNECT = 5
 
 const WalletSignInModal = ({ isOpen, onClose }) => {
   const { isMobile } = useDeviceDetect()
   const [error, errorSet] = useState()
-  const { web3Error, signInWithWallet, setWeb3Error } = useContext(Web3Context)
+  const { web3Error, signInWithWallet, setWeb3Error, walletConnectSign } = useContext(Web3Context)
   const [currentView, setView] = useState(CONNECTABLE)
 
   async function handleConnect(type) {
@@ -23,12 +24,19 @@ const WalletSignInModal = ({ isOpen, onClose }) => {
     try {
       let res = await signInWithWallet(type)
 
+      if (type === Enums.WALLETCONNECT) {
+        setView(WALLETCONNECT)
+      }
       // setView(AUTHENTICATED)
     } catch (error) {
       alert('123')
       errorSet(error.message)
       setView(ERROR)
     }
+  }
+
+  const handleOnSign = async () => {
+    await walletConnectSign()
   }
 
   const handleOnClose = () => {
@@ -88,6 +96,11 @@ const WalletSignInModal = ({ isOpen, onClose }) => {
       )}
 
       {currentView === AUTHENTICATED && <Text>Redirecting...</Text>}
+      {currentView === WALLETCONNECT && (
+        <Button variant="blue" onClick={handleOnSign} minW="100%" borderRadius="24px" w="100%">
+          Sign
+        </Button>
+      )}
     </ModalWrapper>
   )
 }

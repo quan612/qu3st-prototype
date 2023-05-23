@@ -148,6 +148,7 @@ export function Web3WalletProvider({ session, children }) {
   }
 
   const [signClient, signClientSet] = useState()
+  const [web3ModalSession, web3ModalSessionSet] = useState()
 
   const onInitializeSignClient = async () => {
     let client
@@ -166,6 +167,25 @@ export function Web3WalletProvider({ session, children }) {
   useEffect(() => {
     onInitializeSignClient()
   }, [])
+
+  const walletConnectSign = async () => {
+    const account = web3ModalSession.namespaces.eip155.accounts[0].split(':')[2]
+    let params = ['0xdeadbeaf', account]
+    let method = 'personal_sign'
+
+    const result = await signClient.request({
+      topic: web3ModalSession.topic,
+      chainId: 'eip155:1',
+      request: {
+        id: 1,
+        jsonrpc: '2.0',
+        method: method,
+        params: params,
+      },
+    })
+
+    alert(result)
+  }
 
   const signInWithWallet = useCallback(
     async (walletType, payload = null) => {
@@ -197,12 +217,14 @@ export function Web3WalletProvider({ session, children }) {
           //TODO HERE
 
           console.log(1)
-          const signClient = await Client.init({
+          const client = await Client.init({
             logger: 'debug', // DEFAULT_LOGGER,
             // relayUrl: relayerRegion,
             projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
             // metadata: getAppMetadata() || DEFAULT_APP_METADATA,
           })
+
+          signClientSet(client)
 
           // setClient(signClient)
 
@@ -233,7 +255,7 @@ export function Web3WalletProvider({ session, children }) {
           // console.log(a)
           //testing
           try {
-            if (signClient) {
+            if (client) {
               console.log(1111)
               const namespaces = {
                 eip155: {
@@ -242,7 +264,7 @@ export function Web3WalletProvider({ session, children }) {
                   events: ['accountsChanged, connect, disconnect'],
                 },
               }
-              const { uri, approval } = await signClient.connect({
+              const { uri, approval } = await client.connect({
                 requiredNamespaces: namespaces,
               })
               if (uri) {
@@ -251,39 +273,40 @@ export function Web3WalletProvider({ session, children }) {
                   // standaloneChains: namespaces.eip155.chains,
                 })
                 console.log('3')
-                const session = await approval()
+                const sessionTemp = await approval()
+                web3ModalSessionSet(sessionTemp)
                 console.log('4')
-                console.log('session', session)
-                const account = session.namespaces.eip155.accounts[0].split(':')[2]
+                console.log('sessionTemp', sessionTemp)
+                const account = sessionTemp.namespaces.eip155.accounts[0].split(':')[2]
                 alert(`account ${account}`)
                 // console.log('accounts', accounts)
                 web3Modal.closeModal()
 
-                let timeout = setTimeout(async function () {
-                  try {
-                    let params = ['0xdeadbeaf', account]
-                    let method = 'personal_sign'
+                // let timeout = setTimeout(async function () {
+                //   try {
+                //     let params = ['0xdeadbeaf', account]
+                //     let method = 'personal_sign'
 
-                    const result = await signClient.request({
-                      topic: session.topic,
-                      chainId: 'eip155:1',
-                      request: {
-                        id: 1,
-                        jsonrpc: '2.0',
-                        method: method,
-                        params: params,
-                      },
-                    })
-                    alert(123)
-                    alert(result)
-                    // clearTimeout(timeout)
-                    // reject('Missing address or signature')
-                  } catch (e) {
-                    // clearTimeout(timeout)
-                    alert(e.message)
-                    // reject(e)
-                  }
-                }, 800)
+                //     const result = await signClient.request({
+                //       topic: session.topic,
+                //       chainId: 'eip155:1',
+                //       request: {
+                //         id: 1,
+                //         jsonrpc: '2.0',
+                //         method: method,
+                //         params: params,
+                //       },
+                //     })
+                //     alert(123)
+                //     alert(result)
+                //     // clearTimeout(timeout)
+                //     // reject('Missing address or signature')
+                //   } catch (e) {
+                //     // clearTimeout(timeout)
+                //     alert(e.message)
+                //     // reject(e)
+                //   }
+                // }, 800)
 
                 // const result = await signClient.request({
                 //   topic: session.topic,
@@ -299,7 +322,7 @@ export function Web3WalletProvider({ session, children }) {
                 //   },
                 // })
                 // console.log('result', result)
-
+                // alert(result)
                 return
               }
             }
@@ -520,6 +543,7 @@ export function Web3WalletProvider({ session, children }) {
         web3Error,
         setWeb3Error,
         session,
+        walletConnectSign,
       }}
     >
       {children}
