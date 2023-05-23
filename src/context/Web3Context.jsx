@@ -170,6 +170,8 @@ export function Web3WalletProvider({ session, children }) {
 
   const walletConnectSign = async () => {
     try {
+      // const message = `My email is john@doe.com - ${Date.now()}`;
+
       const account = web3ModalSession.namespaces.eip155.accounts[0].split(':')[2]
       alert(`account ${account}`)
       let params = ['0xdeadbeaf', account]
@@ -179,8 +181,8 @@ export function Web3WalletProvider({ session, children }) {
         topic: web3ModalSession.topic,
         chainId: 'eip155:1',
         request: {
-          id: 1,
-          jsonrpc: '2.0',
+          // id: 1,
+          // jsonrpc: '2.0',
           method: method,
           params: params,
         },
