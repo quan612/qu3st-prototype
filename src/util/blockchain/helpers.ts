@@ -184,7 +184,7 @@ export const getBlockExplorerLink = (chain, network, transactionHash) => {
   throw new Error(`Unsupported chain or network on get block explorer`)
 }
 
-export const getRedeemContract =(signerWallet, redeemContractAddress) => {
+export const getRedeemContract = (signerWallet, redeemContractAddress) => {
   const redeemContractJson = require('./redeem-contract.json')
 
   return new ethers.Contract(

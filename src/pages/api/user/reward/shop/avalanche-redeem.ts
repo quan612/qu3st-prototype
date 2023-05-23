@@ -49,123 +49,129 @@ const handler = async (req: WhiteListApiRequest, res: NextApiResponse) => {
     const provider = getProvider(chain, network)
     const signerWallet = getSignerWallet(provider, chain, network)
     const redeemContractAddress = getRedeemContractAddress(chain, network)
-    const redeemContract = getRedeemContract(signerWallet, redeemContractAddress)
-    const options = await getTransactionOption(provider)
+    return res.status(200).json({
+      isError: true,
+      message: "assd",
+    })
+    // const redeemContract = getRedeemContract(signerWallet, redeemContractAddress)
 
-    let slotToClaim
-    try {
-      await prisma.$transaction(
-        async (tx: any) => {
-          // await tx.$executeRaw`select * from public."ShopItemRedeem" p where p."status"='AVAILABLE' and p."shopItemId"=${shopItemId} ORDER BY id ASC LIMIT 1 FOR UPDATE SKIP LOCKED;`
-          // await sleep(500)
-          const currentTime = new Date().toISOString().split('Z')[0].replace('T', ' ').toString()
+    // const redeemContract = getRedeemContract(signerWallet, redeemContractAddress)
+    // const options = await getTransactionOption(provider)
 
-          slotToClaim = await tx.$queryRaw`UPDATE "ShopItemRedeem" 
-            SET "userId"=${userId}, "status"='PENDING', "updatedAt"=CAST(${currentTime} AS timestamp) 
-            where "id" in 
-            (select "id" from public."ShopItemRedeem" p where p."status" = 'AVAILABLE' and p."shopItemId"=${shopItemId} ORDER BY id ASC LIMIT 1 FOR UPDATE SKIP LOCKED)
-            RETURNING "id";
-            ;`
+    // let slotToClaim
+    // try {
+    //   await prisma.$transaction(
+    //     async (tx: any) => {
+    //       // await tx.$executeRaw`select * from public."ShopItemRedeem" p where p."status"='AVAILABLE' and p."shopItemId"=${shopItemId} ORDER BY id ASC LIMIT 1 FOR UPDATE SKIP LOCKED;`
+    //       // await sleep(500)
+    //       const currentTime = new Date().toISOString().split('Z')[0].replace('T', ' ').toString()
 
-          if (slotToClaim === 0 || slotToClaim?.length === 0) {
-            throw new Error(`${shopItem.title} is redeemed all`)
-          }
+    //       slotToClaim = await tx.$queryRaw`UPDATE "ShopItemRedeem" 
+    //         SET "userId"=${userId}, "status"='PENDING', "updatedAt"=CAST(${currentTime} AS timestamp) 
+    //         where "id" in 
+    //         (select "id" from public."ShopItemRedeem" p where p."status" = 'AVAILABLE' and p."shopItemId"=${shopItemId} ORDER BY id ASC LIMIT 1 FOR UPDATE SKIP LOCKED)
+    //         RETURNING "id";
+    //         ;`
 
-          if (cost > 0) {
-            await tx.reward.update({
-              where: {
-                userId_rewardTypeId: { userId, rewardTypeId },
-              },
-              data: {
-                quantity: {
-                  decrement: cost,
-                },
-              },
-            })
-          }
-        },
-        {
-          maxWait: 10000,
-          timeout: 30000,
-        },
-      )
-    } catch (error) {
-      return res.status(200).json({
-        isError: true,
-        message: error.message,
-      })
-    }
+    //       if (slotToClaim === 0 || slotToClaim?.length === 0) {
+    //         throw new Error(`${shopItem.title} is redeemed all`)
+    //       }
 
-    // console.log("slotToClaim", slotToClaim)
-    // const redeemedSlot = await prisma.shopItemRedeem.findFirst({
-    //   where: {
-    //     shopItemId,
-    //     redeemedBy: {
-    //       userId,
+    //       if (cost > 0) {
+    //         await tx.reward.update({
+    //           where: {
+    //             userId_rewardTypeId: { userId, rewardTypeId },
+    //           },
+    //           data: {
+    //             quantity: {
+    //               decrement: cost,
+    //             },
+    //           },
+    //         })
+    //       }
     //     },
-    //     status: RedeemStatus.PENDING,
-    //   },
-    //   orderBy: {
-    //     updatedAt: 'desc',
-    //   },
-    // })
+    //     {
+    //       maxWait: 10000,
+    //       timeout: 30000,
+    //     },
+    //   )
+    // } catch (error) {
+    //   return res.status(200).json({
+    //     isError: true,
+    //     message: error.message,
+    //   })
+    // }
 
-    const contractAddress = shopItem?.contractAddress
-    const slotId = slotToClaim[0]?.id
-    console.log('slotId', slotId)
+    // // console.log("slotToClaim", slotToClaim)
+    // // const redeemedSlot = await prisma.shopItemRedeem.findFirst({
+    // //   where: {
+    // //     shopItemId,
+    // //     redeemedBy: {
+    // //       userId,
+    // //     },
+    // //     status: RedeemStatus.PENDING,
+    // //   },
+    // //   orderBy: {
+    // //     updatedAt: 'desc',
+    // //   },
+    // // })
 
-    let tx
+    // const contractAddress = shopItem?.contractAddress
+    // const slotId = slotToClaim[0]?.id
+    // console.log('slotId', slotId)
 
-    if (shopItem.contractType !== ContractType.ERC721 && shopItem.contractType !== ContractType.ERC20 && shopItem.contractType !== ContractType.ERC721A && shopItem.contractType !== ContractType.ERC1155) {
-      return res.status(200).json({ message: 'Unsupported contract type' })
-    }
+    // let tx
+
+    // if (shopItem.contractType !== ContractType.ERC721 && shopItem.contractType !== ContractType.ERC20 && shopItem.contractType !== ContractType.ERC721A && shopItem.contractType !== ContractType.ERC1155) {
+    //   return res.status(200).json({ message: 'Unsupported contract type' })
+    // }
     try {
-      if (shopItem.contractType === ContractType.ERC20) {
-        const ercContract = getContract(signerWallet, contractAddress, shopItem?.abi)
-        const decimal = await ercContract.decimals()
-        const multiplier = shopItem.multiplier
-        const parseDecimal = ethers.utils.parseUnits('1', decimal)
-        const amount = parseDecimal.mul(multiplier)
+    //   if (shopItem.contractType === ContractType.ERC20) {
+    //     const ercContract = getContract(signerWallet, contractAddress, shopItem?.abi)
+    //     const decimal = await ercContract.decimals()
+    //     const multiplier = shopItem.multiplier
+    //     const parseDecimal = ethers.utils.parseUnits('1', decimal)
+    //     const amount = parseDecimal.mul(multiplier)
 
-        tx = await redeemContract.redeemERC20(contractAddress, wallet, amount, slotId, options)
-      }
-      if (shopItem.contractType === ContractType.ERC721) {
-        tx = await redeemContract.redeemERC721(contractAddress, wallet, slotId, options)
-      }
-      if (shopItem.contractType === ContractType.ERC721A) {
-        tx = await redeemContract.redeemERC721A(contractAddress, wallet, slotId, options)
-      }
-      if (shopItem.contractType === ContractType.ERC1155) {
-        tx = await redeemContract.redeemERC1155(
-          contractAddress,
-          wallet,
-          shopItem.tokenId,
-          slotId,
-          options,
-        )
-      }
-      if (tx === null || !tx.hash) {
-        throw new Error('Fail to submit transaction. Please contact support@qu3st.io')
-      }
+    //     tx = await redeemContract.redeemERC20(contractAddress, wallet, amount, slotId, options)
+    //   }
+    //   if (shopItem.contractType === ContractType.ERC721) {
+    //     tx = await redeemContract.redeemERC721(contractAddress, wallet, slotId, options)
+    //   }
+    //   if (shopItem.contractType === ContractType.ERC721A) {
+    //     tx = await redeemContract.redeemERC721A(contractAddress, wallet, slotId, options)
+    //   }
+    //   if (shopItem.contractType === ContractType.ERC1155) {
+    //     tx = await redeemContract.redeemERC1155(
+    //       contractAddress,
+    //       wallet,
+    //       shopItem.tokenId,
+    //       slotId,
+    //       options,
+    //     )
+    //   }
+    //   if (tx === null || !tx.hash) {
+    //     throw new Error('Fail to submit transaction. Please contact support@qu3st.io')
+    //   }
 
-      await prisma.shopItemRedeem.update({
-        where: {
-          id: slotId,
-        },
-        data: {
-          extendedRedeemData: {
-            transactionHash: tx.hash,
-          },
-        },
-      })
+    //   await prisma.shopItemRedeem.update({
+    //     where: {
+    //       id: slotId,
+    //     },
+    //     data: {
+    //       extendedRedeemData: {
+    //         transactionHash: tx.hash,
+    //       },
+    //     },
+    //   })
 
-      const etherscanLink = getBlockExplorerLink(chain, network, tx.hash)
-      return res.status(200).json({ message: etherscanLink })
+    //   const etherscanLink = getBlockExplorerLink(chain, network, tx.hash)
+    //   return res.status(200).json({ message: etherscanLink })
     } catch (error) {
       if (cost > 0) {
         await revertRewardUpdate(userId, rewardTypeId, cost)
       }
-      await revertRedeemSlot(slotId)
+      // await revertRedeemSlot(slotId)
 
       let errorMessage;
 
