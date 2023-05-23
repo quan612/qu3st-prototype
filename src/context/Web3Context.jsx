@@ -26,6 +26,7 @@ const web3Modal = new Web3Modal({
 export const Web3Context = React.createContext()
 
 import Client from '@walletconnect/sign-client'
+import { UniversalProvider } from '@walletconnect/universal-provider'
 
 export function Web3WalletProvider({ session, children }) {
   const [web3Error, setWeb3Error] = useState(null)
@@ -150,6 +151,8 @@ export function Web3WalletProvider({ session, children }) {
   const [signClient, signClientSet] = useState()
   const [web3ModalSession, web3ModalSessionSet] = useState()
 
+  const [ethereumProvider, setEthereumProvider] = useState()
+
   const onInitializeSignClient = async () => {
     let client
     try {
@@ -229,7 +232,15 @@ export function Web3WalletProvider({ session, children }) {
           // metadata: getAppMetadata() || DEFAULT_APP_METADATA,
         })
 
-        signClientSet(client)
+        const provider = await UniversalProvider.init({
+          projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
+          logger: 'debug',
+          relayUrl: 'wss://relay.walletconnect.com',
+        })
+
+        // signClientSet(client)
+        setEthereumProvider(provider)
+        signClientSet(provider.client)
 
         // const core = new Core({
         //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
@@ -258,79 +269,68 @@ export function Web3WalletProvider({ session, children }) {
         // console.log(a)
         //testing
         try {
-          if (client) {
-            // signClientSet(client)
-            const namespaces = {
-              eip155: {
-                methods: ['personal_sign'],
-                chains: ['eip155:1'],
-                events: ['accountsChanged, connect, disconnect'],
-              },
-            }
-            const { uri, approval } = await client.connect({
-              requiredNamespaces: namespaces,
-            })
-            if (uri) {
-              await web3Modal.openModal({
-                uri,
-                // standaloneChains: namespaces.eip155.chains,
-              })
-              // console.log('3')
-              const sessionTemp = await approval()
-              web3ModalSessionSet(sessionTemp)
-              // console.log('4')
-              // console.log('sessionTemp', sessionTemp)
+          // if (client) {
+          //   // signClientSet(client)
+          //   const namespaces = {
+          //     eip155: {
+          //       methods: ['personal_sign'],
+          //       chains: ['eip155:1'],
+          //       events: ['accountsChanged, connect, disconnect'],
+          //     },
+          //   }
+          //   const { uri, approval } = await client.connect({
+          //     requiredNamespaces: namespaces,
+          //   })
+          //   if (uri) {
+          //     await web3Modal.openModal({
+          //       uri,
+          //       // standaloneChains: namespaces.eip155.chains,
+          //     })
+          //     // console.log('3')
+          //     const sessionTemp = await approval()
+          //     web3ModalSessionSet(sessionTemp)
+          //     // console.log('4')
+          //     // console.log('sessionTemp', sessionTemp)
 
-              // console.log('accounts', accounts)
+          //     // console.log('accounts', accounts)
 
-              client.pairing.getAll({ active: true })
+          //     client.pairing.getAll({ active: true })
 
-              web3Modal.closeModal()
+          //     web3Modal.closeModal()
 
-              // let timeout = setTimeout(async function () {
-              //   try {
-              //     let params = ['0xdeadbeaf', account]
-              //     let method = 'personal_sign'
-
-              //     const result = await signClient.request({
-              //       topic: session.topic,
-              //       chainId: 'eip155:1',
-              //       request: {
-              //         id: 1,
-              //         jsonrpc: '2.0',
-              //         method: method,
-              //         params: params,
-              //       },
-              //     })
-              //     alert(123)
-              //     alert(result)
-              //     // clearTimeout(timeout)
-              //     // reject('Missing address or signature')
-              //   } catch (e) {
-              //     // clearTimeout(timeout)
-              //     alert(e.message)
-              //     // reject(e)
-              //   }
-              // }, 800)
-
-              // const result = await signClient.request({
-              //   topic: session.topic,
-              //   chainId: 'eip155:1',
-              //   request: {
-              //     id: 1,
-              //     jsonrpc: '2.0',
-              //     method: 'eth_sign',
-              //     params: [
-              //       '0x1d85568eEAbad713fBB5293B45ea066e552A90De',
-              //       '0x7468697320697320612074657374206d65737361676520746f206265207369676e6564',
-              //     ],
-              //   },
-              // })
-              // console.log('result', result)
-              // alert(result)
-              return
-            }
+          //     return
+          //   }
+          // }
+          if (!provider) {
+            throw new ReferenceError('WalletConnect Client is not initialized.')
           }
+
+          // const chainId = caipChainId.split(":").pop();
+
+          // console.log("Enabling EthereumProvider for chainId: ", chainId);
+
+          const pairings = provider.client.pairing.getAll({ active: true })
+          const session = await provider.connect({
+            namespaces: {
+              eip155: {
+                methods: [
+                  // 'eth_sendTransaction',
+                  // 'eth_signTransaction',
+                  // 'eth_sign',
+                  'personal_sign',
+                  // 'eth_signTypedData',
+                ],
+                chains: [`eip155:1`],
+                events: ['chainChanged', 'accountsChanged'],
+                rpcMap: {},
+              },
+            },
+            pairingTopic: pairings[0]?.topic, //pairing?.topic,
+          })
+
+          // createWeb3Provider(ethereumProvider)
+          const _accounts = await ethereumProvider.enable()
+          console.log('_accounts', _accounts)
         } catch (error) {
           alert('test1')
           alert(error.message)
