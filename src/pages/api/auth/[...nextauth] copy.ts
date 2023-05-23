@@ -11,16 +11,18 @@ import { utils } from 'ethers'
 import Enums from 'enums'
 import DiscordProvider from 'next-auth/providers/discord'
 import TwitterProvider from 'next-auth/providers/twitter'
-import { getVariableConfig } from 'repositories/config'
+import { getConfig, getVariableConfig } from 'repositories/config'
 import { validateEmail } from 'util/index'
 
 const bcrypt = require('bcrypt')
 const { NEXTAUTH_SECRET } = process.env
 
-import { AccountStatus } from '@prisma/client'
+import { AccountStatus, QuestVariables } from '@prisma/client'
 import { getIsSMSVerificationRequired } from 'repositories/user'
 import verifyUathLogin from '@util/verifyUathLogin'
 import { Authorization } from '@uauth/js'
+
+// const allConfig: QuestVariables = await getConfig();
 
 export const authOptions = {
   providers: [
@@ -154,12 +156,16 @@ export const authOptions = {
     }),
     DiscordProvider({
       /* default should be [origin]/api/auth/callback/[provider] ~ https://next-auth.js.org/configuration/providers/oauth */
-      clientId: await getVariableConfig('discordId'),
-      clientSecret: await getVariableConfig('discordSecret'),
+      // clientId: allConfig?.discordId,//await getVariableConfig('discordId'),
+      // clientSecret: allConfig?.discordSecret,//await getVariableConfig('discordSecret'),
+      clientId: await getVariableConfig('discordId'),//,
+      clientSecret: await getVariableConfig('discordSecret'),//,
     }),
     TwitterProvider({
-      clientId: await getVariableConfig('twitterId'),
-      clientSecret: await getVariableConfig('twitterSecret'),
+      // clientId: allConfig?.twitterId,
+      // clientSecret: allConfig?.twitterSecret,
+      clientId: await getVariableConfig('twitterId'),//await getVariableConfig('twitterId'),
+      clientSecret:await getVariableConfig('twitterSecret'),//await getVariableConfig('twitterSecret'),
       version: '2.0',
     }),
   ],
@@ -171,7 +177,6 @@ export const authOptions = {
   jwt: {
     // signingKey: process.env.NEXTAUTH_SECRET || "",
     maxAge: 60 * 60 * 5,
-
   },
   callbacks: {
     signIn: async (user) => {
@@ -253,72 +258,80 @@ export const authOptions = {
     },
     async jwt({ token, user, account, profile }) {
       if (user) {
-        token.profile = profile
+        let userQuery
+
+        if (account.provider === 'twitter') {
+          userQuery = await prisma.whiteList.findFirst({
+            where: {
+              twitterId: user?.id,
+            },
+          })
+        }
+        if (account.provider === 'discord') {
+          userQuery = await prisma.whiteList.findFirst({
+            where: {
+              discordId: user?.id,
+            },
+          })
+        }
+        if (account.provider === 'web3-wallet') {
+          userQuery = await prisma.whiteList.findFirst({
+            where: {
+              wallet: { equals: user?.wallet, mode: 'insensitive' },
+            },
+          })
+        }
+        if (account.provider === 'email') {
+          userQuery = await prisma.whiteList.findFirst({
+            where: {
+              email: user?.email,
+            },
+          })
+        }
+        if (account.provider === 'unstoppable-authenticate') {
+          userQuery = await prisma.whiteList.findFirst({
+            where: {
+              uathUser: user?.uathUser,
+            },
+          })
+        }
+
+        // token.profile = profile
         token.user = user
+
         token.provider = account?.provider
+
+        token.user.twitter = userQuery?.twitterUserName || ''
+        token.user.discord = userQuery?.discordUserDiscriminator || ''
+        token.user.email = userQuery?.email || ''
+        token.user.avatar = userQuery?.avatar || ''
+        token.user.wallet = userQuery?.wallet || ''
+        token.user.uathUser = userQuery?.uathUser || ''
+        token.user.userId = userQuery.userId
       }
 
       return token
     },
     async session({ session, token }) {
-      // console.log(`Session handling #######################################################################`)
-      let userQuery
-      if (token.provider === 'twitter') {
-        userQuery = await prisma.whiteList.findFirst({
-          where: {
-            twitterId: token?.user?.id,
-          },
-        })
-      }
-      if (token.provider === 'discord') {
-        userQuery = await prisma.whiteList.findFirst({
-          where: {
-            discordId: token?.user?.id,
-          },
-        })
-      }
-      if (token.provider === 'web3-wallet') {
-        userQuery = await prisma.whiteList.findFirst({
-          where: {
-            wallet: { equals: token?.user?.wallet, mode: 'insensitive' },
-          },
-        })
-      }
-      if (token.provider === 'email') {
-        userQuery = await prisma.whiteList.findFirst({
-          where: {
-            email: token?.user?.email,
-          },
-        })
-      }
-      if (token.provider === 'unstoppable-authenticate') {
-        userQuery = await prisma.whiteList.findFirst({
-          where: {
-            uathUser: token?.user?.uathUser,
-          },
-        })
-      }
       session.user = token.user
       session.provider = token.provider
 
-      session.user.twitter = userQuery?.twitterUserName || ''
-      session.user.discord = userQuery?.discordUserDiscriminator || ''
-      session.user.email = userQuery?.email || ''
-      session.user.avatar = userQuery?.avatar || ''
-      session.user.wallet = userQuery?.wallet || ''
-      session.user.uathUser = userQuery?.uathUser || ''
-      session.user.userId = userQuery.userId
-
+      // console.log(session)
       return session
     },
   },
   secret: NEXTAUTH_SECRET,
 }
+// export default (req, res) => {
+
+// export default function auth(req, res) {
+
+  // export const a = 1;
 
 export default (req, res) => {
   if (process.env.VERCEL) {
     // prefer NEXTAUTH_URL, fallback to x-forwarded-host
     req.headers['x-forwarded-host'] = process.env.NEXTAUTH_URL || req.headers['x-forwarded-host']
   }
-  return NextAuth(req, res, authOptions)
+  return  NextAuth(req, res, authOptions)
 }
