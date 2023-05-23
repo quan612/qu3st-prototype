@@ -274,12 +274,12 @@ export function Web3WalletProvider({ session, children }) {
                         params: params,
                       },
                     })
-
+                    alert(123)
                     alert(result)
-                    clearTimeout(timeout)
+                    // clearTimeout(timeout)
                     // reject('Missing address or signature')
                   } catch (e) {
-                    clearTimeout(timeout)
+                    // clearTimeout(timeout)
                     alert(e.message)
                     // reject(e)
                   }
