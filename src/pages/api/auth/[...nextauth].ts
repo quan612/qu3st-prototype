@@ -324,14 +324,14 @@ export const authOptions = {
 }
 // export default (req, res) => {
 
-export default async function auth(req, res) {
+// export default function auth(req, res) {
 
   // export const a = 1;
 
-// export default (req, res) => {
+export default (req, res) => {
   if (process.env.VERCEL) {
     // prefer NEXTAUTH_URL, fallback to x-forwarded-host
     req.headers['x-forwarded-host'] = process.env.NEXTAUTH_URL || req.headers['x-forwarded-host']
   }
-  return await NextAuth(req, res, authOptions)
+  return  NextAuth(req, res, authOptions)
 }

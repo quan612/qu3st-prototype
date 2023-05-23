@@ -2,7 +2,7 @@ import { sleep } from "@util/index"
 // import erc721Queue from "queues/erc721";
 
 
-export default async function walletSignUp(req, res) {
+export default async function test(req, res) {
 
   // await trackRequest(req)
   // const job = await erc721Queue.add({ foo: 'http://example.com/video1.mov' });
