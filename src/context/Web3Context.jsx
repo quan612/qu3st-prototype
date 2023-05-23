@@ -258,19 +258,32 @@ export function Web3WalletProvider({ session, children }) {
                 alert(`account ${account}`)
                 // console.log('accounts', accounts)
                 web3Modal.closeModal()
-                let params = ['0xdeadbeaf', account]
-                let method = 'personal_sign'
 
-                const result = await signClient.request({
-                  topic: session.topic,
-                  chainId: 'eip155:1',
-                  request: {
-                    id: 1,
-                    jsonrpc: '2.0',
-                    method: method,
-                    params: params,
-                  },
-                })
+                let timeout = setTimeout(async function () {
+                  try {
+                    let params = ['0xdeadbeaf', account]
+                    let method = 'personal_sign'
+
+                    const result = await signClient.request({
+                      topic: session.topic,
+                      chainId: 'eip155:1',
+                      request: {
+                        id: 1,
+                        jsonrpc: '2.0',
+                        method: method,
+                        params: params,
+                      },
+                    })
+
+                    alert(result)
+                    clearTimeout(timeout)
+                    reject('Missing address or signature')
+                  } catch (e) {
+                    clearTimeout(timeout)
+                    alert(e.message)
+                    reject(e)
+                  }
+                }, 800)
 
                 // const result = await signClient.request({
                 //   topic: session.topic,
@@ -286,7 +299,6 @@ export function Web3WalletProvider({ session, children }) {
                 //   },
                 // })
                 // console.log('result', result)
-                alert(result)
 
                 return
               }
