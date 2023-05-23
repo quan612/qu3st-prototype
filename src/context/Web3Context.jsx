@@ -277,11 +277,11 @@ export function Web3WalletProvider({ session, children }) {
 
                     alert(result)
                     clearTimeout(timeout)
-                    reject('Missing address or signature')
+                    // reject('Missing address or signature')
                   } catch (e) {
                     clearTimeout(timeout)
                     alert(e.message)
-                    reject(e)
+                    // reject(e)
                   }
                 }, 800)
 
