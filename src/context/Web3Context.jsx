@@ -170,7 +170,7 @@ export function Web3WalletProvider({ session, children }) {
 
   const walletConnectSign = async () => {
     try {
-      const account = sessionTemp.namespaces.eip155.accounts[0].split(':')[2]
+      const account = web3ModalSession.namespaces.eip155.accounts[0].split(':')[2]
       alert(`account ${account}`)
       let params = ['0xdeadbeaf', account]
       let method = 'personal_sign'
