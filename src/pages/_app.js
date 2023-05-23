@@ -13,7 +13,7 @@ import theme from 'theme/theme'
 
 import { AnimatePresence } from 'framer-motion'
 import UserLayout from '@components/end-user/UserLayout'
-import { Web3ReactProvider } from '@web3-react/core'
+
 import { Web3WalletProvider } from '@context/Web3Context'
 import { CoreWalletProvider } from '@context/CoreWalletContext'
 export function reportWebVitals(metric) {
