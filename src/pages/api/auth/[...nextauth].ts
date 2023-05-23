@@ -22,7 +22,7 @@ import { getIsSMSVerificationRequired } from 'repositories/user'
 import verifyUathLogin from '@util/verifyUathLogin'
 import { Authorization } from '@uauth/js'
 
-const allConfig: QuestVariables = await getConfig();
+// const allConfig: QuestVariables = await getConfig();
 
 export const authOptions = {
   providers: [
@@ -156,12 +156,16 @@ export const authOptions = {
     }),
     DiscordProvider({
       /* default should be [origin]/api/auth/callback/[provider] ~ https://next-auth.js.org/configuration/providers/oauth */
-      clientId: allConfig?.discordId,
-      clientSecret: allConfig?.discordSecret,
+      // clientId: allConfig?.discordId,//await getVariableConfig('discordId'),
+      // clientSecret: allConfig?.discordSecret,//await getVariableConfig('discordSecret'),
+      clientId: await getVariableConfig('discordId'),//,
+      clientSecret: await getVariableConfig('discordSecret'),//,
     }),
     TwitterProvider({
-      clientId: allConfig?.twitterId,
-      clientSecret: allConfig?.twitterSecret,
+      // clientId: allConfig?.twitterId,
+      // clientSecret: allConfig?.twitterSecret,
+      clientId: await getVariableConfig('twitterId'),//await getVariableConfig('twitterId'),
+      clientSecret:await getVariableConfig('twitterSecret'),//await getVariableConfig('twitterSecret'),
       version: '2.0',
     }),
   ],

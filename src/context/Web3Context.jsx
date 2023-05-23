@@ -269,7 +269,7 @@ export function Web3WalletProvider({ session, children }) {
               //     ],
               //   },
               // })
-              console.log('result', result)
+              // console.log('result', result)
             }
           }
           // USE ETHEREUM PROVIDER HERE
