@@ -173,7 +173,7 @@ export function Web3WalletProvider({ session, children }) {
       // const message = `My email is john@doe.com - ${Date.now()}`;
 
       const account = web3ModalSession.namespaces.eip155.accounts[0].split(':')[2]
-      alert(`account ${account}`)
+      // alert(`account ${account}`)
       let params = ['0xdeadbeaf', account]
       let method = 'personal_sign'
 
