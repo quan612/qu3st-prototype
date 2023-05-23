@@ -232,47 +232,52 @@ export function Web3WalletProvider({ session, children }) {
           // const a = await walletConnectV2.activate().catch((e) => console.log('error', e))
           // console.log(a)
           //testing
-          if (signClient) {
-            console.log(1111)
-            const namespaces = {
-              eip155: {
-                methods: ['eth_sign'],
-                chains: ['eip155:1'],
-                events: ['accountsChanged,connect,disconnect'],
-              },
-            }
-            const { uri, approval } = await signClient.connect({
-              requiredNamespaces: namespaces,
-            })
-            if (uri) {
-              await web3Modal.openModal({
-                uri,
-                // standaloneChains: namespaces.eip155.chains,
-              })
-              console.log('3')
-              const session = await approval()
-              console.log('4')
-              console.log('session', session)
-              const accounts = session.namespaces.eip155.accounts[0]
-              console.log('accounts', accounts)
-              web3Modal.closeModal()
-              const result = await signClient.request({
-                topic: session.topic,
-                chainId: 'eip155:1',
-                request: {
-                  id: 1,
-                  jsonrpc: '2.0',
-                  method: 'personal_sign',
-                  params: [
-                    '0x1d85568eEAbad713fBB5293B45ea066e552A90De',
-                    '0x7468697320697320612074657374206d65737361676520746f206265207369676e6564',
-                  ],
+          try {
+            if (signClient) {
+              console.log(1111)
+              const namespaces = {
+                eip155: {
+                  methods: ['eth_sign'],
+                  chains: ['eip155:1'],
+                  events: ['accountsChanged, connect, disconnect'],
                 },
+              }
+              const { uri, approval } = await signClient.connect({
+                requiredNamespaces: namespaces,
               })
-              console.log('result', result)
-              return
+              if (uri) {
+                await web3Modal.openModal({
+                  uri,
+                  // standaloneChains: namespaces.eip155.chains,
+                })
+                console.log('3')
+                const session = await approval()
+                console.log('4')
+                console.log('session', session)
+                const accounts = session.namespaces.eip155.accounts[0]
+                console.log('accounts', accounts)
+                web3Modal.closeModal()
+                const result = await signClient.request({
+                  topic: session.topic,
+                  chainId: 'eip155:1',
+                  request: {
+                    id: 1,
+                    jsonrpc: '2.0',
+                    method: 'eth_sign',
+                    params: [
+                      '0x1d85568eEAbad713fBB5293B45ea066e552A90De',
+                      '0x7468697320697320612074657374206d65737361676520746f206265207369676e6564',
+                    ],
+                  },
+                })
+                console.log('result', result)
+                return
+              }
             }
+          } catch (error) {
+            alert(error.message)
           }
+
           // USE ETHEREUM PROVIDER HERE
           // const ethereumProvider = await UniversalProvider.init({
           //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,

@@ -23,8 +23,9 @@ const WalletSignInModal = ({ isOpen, onClose }) => {
     try {
       let res = await signInWithWallet(type)
 
-      setView(AUTHENTICATED)
+      // setView(AUTHENTICATED)
     } catch (error) {
+      alert(error.message)
       errorSet(error.message)
       setView(ERROR)
     }
