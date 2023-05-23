@@ -257,7 +257,7 @@ export function Web3WalletProvider({ session, children }) {
                 const account = session.namespaces.eip155.accounts[0].split(':')[2]
                 alert(`account ${account}`)
                 // console.log('accounts', accounts)
-
+                web3Modal.closeModal()
                 let params = ['0xdeadbeaf', account]
                 let method = 'personal_sign'
 
@@ -287,7 +287,7 @@ export function Web3WalletProvider({ session, children }) {
                 // })
                 // console.log('result', result)
                 alert(result)
-                web3Modal.closeModal()
+
                 return
               }
             }
