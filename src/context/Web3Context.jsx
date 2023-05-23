@@ -194,262 +194,261 @@ export function Web3WalletProvider({ session, children }) {
     }
   }
 
-  const signInWithWallet = useCallback(
-    async (walletType, payload = null) => {
-      if (!walletType) {
-        throw new Error('Missing wallet type.')
-      }
-      if (payload) {
-        //automatic sign in without sign message
-        let { signature, address } = payload
-        await signIn('web3-wallet', {
-          redirect: true,
-          signature,
-          wallet: address,
-          callbackUrl: `${window.location.origin}`,
-        }).catch((error) => {
-          throw new Error(error.message)
+  const signInWithWallet = async (walletType, payload = null) => {
+    if (!walletType) {
+      throw new Error('Missing wallet type.')
+    }
+    if (payload) {
+      //automatic sign in without sign message
+      let { signature, address } = payload
+      await signIn('web3-wallet', {
+        redirect: true,
+        signature,
+        wallet: address,
+        callbackUrl: `${window.location.origin}`,
+      }).catch((error) => {
+        throw new Error(error.message)
+      })
+      return
+    }
+    try {
+      let addresses, providerInstance
+      const { ethers } = await import('ethers')
+
+      if (walletType === Enums.METAMASK) {
+        providerInstance = new ethers.providers.Web3Provider(window.ethereum)
+        addresses = await providerInstance.send('eth_requestAccounts', [])
+        subscribeProvider(window.ethereum)
+      } else if (walletType === Enums.WALLETCONNECT) {
+        //TODO HERE
+
+        const client = await Client.init({
+          logger: 'debug', // DEFAULT_LOGGER,
+          relayUrl: 'wss://relay.walletconnect.com',
+          projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
+          // metadata: getAppMetadata() || DEFAULT_APP_METADATA,
         })
-        return
-      }
-      try {
-        let addresses, providerInstance
-        const { ethers } = await import('ethers')
 
-        if (walletType === Enums.METAMASK) {
-          providerInstance = new ethers.providers.Web3Provider(window.ethereum)
-          addresses = await providerInstance.send('eth_requestAccounts', [])
-          subscribeProvider(window.ethereum)
-        } else if (walletType === Enums.WALLETCONNECT) {
-          //TODO HERE
+        signClientSet(client)
 
-          console.log(1)
-          const client = await Client.init({
-            logger: 'debug', // DEFAULT_LOGGER,
-            // relayUrl: relayerRegion,
-            projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
-            // metadata: getAppMetadata() || DEFAULT_APP_METADATA,
-          })
+        // const core = new Core({
+        //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
+        // })
+        // const web3wallet = await Web3Wallet.init({
+        //   core, // <- pass the shared `core` instance
+        //   metadata: {
+        //     name: 'Demo app',
+        //     description: 'Demo Client as Wallet/Peer',
+        //     url: 'www.walletconnect.com',
+        //     icons: [],
+        //   },
+        // })
 
-          signClientSet(client)
-
-          // const core = new Core({
-          //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
-          // })
-          // const web3wallet = await Web3Wallet.init({
-          //   core, // <- pass the shared `core` instance
-          //   metadata: {
-          //     name: 'Demo app',
-          //     description: 'Demo Client as Wallet/Peer',
-          //     url: 'www.walletconnect.com',
-          //     icons: [],
-          //   },
-          // })
-
-          // await web3wallet.core.pairing.pair({ uri })
-          // web3wallet.on('session_proposal', async (proposal) => {
-          //   console.log(session_proposal)
-          //   const session = await web3wallet.rejectSession({
-          //     id: proposal.id,
-          //     reason: getSdkError('USER_REJECTED_METHODS'),
-          //   })
-          // })
-          // 2. Configure web3Modal
-          // walletConnectV2
-          // const a = await walletConnectV2.activate().catch((e) => console.log('error', e))
-          // console.log(a)
-          //testing
-          try {
-            if (client) {
-              // signClientSet(client)
-              const namespaces = {
-                eip155: {
-                  methods: ['personal_sign'],
-                  chains: ['eip155:1'],
-                  events: ['accountsChanged, connect, disconnect'],
-                },
-              }
-              const { uri, approval } = await client.connect({
-                requiredNamespaces: namespaces,
-              })
-              if (uri) {
-                await web3Modal.openModal({
-                  uri,
-                  // standaloneChains: namespaces.eip155.chains,
-                })
-                // console.log('3')
-                const sessionTemp = await approval()
-                web3ModalSessionSet(sessionTemp)
-                // console.log('4')
-                // console.log('sessionTemp', sessionTemp)
-
-                // console.log('accounts', accounts)
-                web3Modal.closeModal()
-
-                // let timeout = setTimeout(async function () {
-                //   try {
-                //     let params = ['0xdeadbeaf', account]
-                //     let method = 'personal_sign'
-
-                //     const result = await signClient.request({
-                //       topic: session.topic,
-                //       chainId: 'eip155:1',
-                //       request: {
-                //         id: 1,
-                //         jsonrpc: '2.0',
-                //         method: method,
-                //         params: params,
-                //       },
-                //     })
-                //     alert(123)
-                //     alert(result)
-                //     // clearTimeout(timeout)
-                //     // reject('Missing address or signature')
-                //   } catch (e) {
-                //     // clearTimeout(timeout)
-                //     alert(e.message)
-                //     // reject(e)
-                //   }
-                // }, 800)
-
-                // const result = await signClient.request({
-                //   topic: session.topic,
-                //   chainId: 'eip155:1',
-                //   request: {
-                //     id: 1,
-                //     jsonrpc: '2.0',
-                //     method: 'eth_sign',
-                //     params: [
-                //       '0x1d85568eEAbad713fBB5293B45ea066e552A90De',
-                //       '0x7468697320697320612074657374206d65737361676520746f206265207369676e6564',
-                //     ],
-                //   },
-                // })
-                // console.log('result', result)
-                // alert(result)
-                return
-              }
+        // await web3wallet.core.pairing.pair({ uri })
+        // web3wallet.on('session_proposal', async (proposal) => {
+        //   console.log(session_proposal)
+        //   const session = await web3wallet.rejectSession({
+        //     id: proposal.id,
+        //     reason: getSdkError('USER_REJECTED_METHODS'),
+        //   })
+        // })
+        // 2. Configure web3Modal
+        // walletConnectV2
+        // const a = await walletConnectV2.activate().catch((e) => console.log('error', e))
+        // console.log(a)
+        //testing
+        try {
+          if (client) {
+            // signClientSet(client)
+            const namespaces = {
+              eip155: {
+                methods: ['personal_sign'],
+                chains: ['eip155:1'],
+                events: ['accountsChanged, connect, disconnect'],
+              },
             }
-          } catch (error) {
-            alert('test1')
-            alert(error.message)
+            const { uri, approval } = await client.connect({
+              requiredNamespaces: namespaces,
+            })
+            if (uri) {
+              await web3Modal.openModal({
+                uri,
+                // standaloneChains: namespaces.eip155.chains,
+              })
+              // console.log('3')
+              const sessionTemp = await approval()
+              web3ModalSessionSet(sessionTemp)
+              // console.log('4')
+              // console.log('sessionTemp', sessionTemp)
+
+              // console.log('accounts', accounts)
+
+              client.pairing.getAll({ active: true })
+
+              web3Modal.closeModal()
+
+              // let timeout = setTimeout(async function () {
+              //   try {
+              //     let params = ['0xdeadbeaf', account]
+              //     let method = 'personal_sign'
+
+              //     const result = await signClient.request({
+              //       topic: session.topic,
+              //       chainId: 'eip155:1',
+              //       request: {
+              //         id: 1,
+              //         jsonrpc: '2.0',
+              //         method: method,
+              //         params: params,
+              //       },
+              //     })
+              //     alert(123)
+              //     alert(result)
+              //     // clearTimeout(timeout)
+              //     // reject('Missing address or signature')
+              //   } catch (e) {
+              //     // clearTimeout(timeout)
+              //     alert(e.message)
+              //     // reject(e)
+              //   }
+              // }, 800)
+
+              // const result = await signClient.request({
+              //   topic: session.topic,
+              //   chainId: 'eip155:1',
+              //   request: {
+              //     id: 1,
+              //     jsonrpc: '2.0',
+              //     method: 'eth_sign',
+              //     params: [
+              //       '0x1d85568eEAbad713fBB5293B45ea066e552A90De',
+              //       '0x7468697320697320612074657374206d65737361676520746f206265207369676e6564',
+              //     ],
+              //   },
+              // })
+              // console.log('result', result)
+              // alert(result)
+              return
+            }
           }
-
-          // USE ETHEREUM PROVIDER HERE
-          // const ethereumProvider = await UniversalProvider.init({
-          //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
-          //   logger: 'debug',
-          //   relayUrl: 'wss://relay.walletconnect.com', //DEFAULT_RELAY_URL
-          // })
-          // const session = await ethereumProvider.connect({
-          //   namespaces: {
-          //     eip155: {
-          //       methods: [
-          //         'eth_sendTransaction',
-          //         'eth_signTransaction',
-          //         'eth_sign',
-          //         'personal_sign',
-          //         'eth_signTypedData',
-          //       ],
-          //       chains: ['eip155:80001'],
-          //       events: ['chainChanged', 'accountsChanged'],
-          //       rpcMap: {
-          //         80001: `https://rpc.walletconnect.com?chainId=eip155:80001&projectId=${process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID}`,
-          //       },
-          //     },
-          //   },
-          //   // pairingTopic: pairing?.topic,
-          // })
-          // const _accounts = await ethereumProvider.enable()
-          // const web3Provider = new ethers.providers.Web3Provider(provider)
-          // const _accounts = await ethereumProvider.enable()
-          // console.log('_accounts', _accounts)
-          // const test = await EthereumProvider.init({
-          //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID, // REQUIRED your projectId
-          //   chains: [1], // REQUIRED chain ids
-          //   showQrModal: false, // REQUIRED set to "true" to use @web3modal/standalone,
-          //   // methods, // OPTIONAL ethereum methods
-          //   // events, // OPTIONAL ethereum events
-          //   // rpcMap, // OPTIONAL rpc urls for each chain
-          //   // metadata, // OPTIONAL metadata of your app
-          //   // qrModalOptions, // OPTIONAL - `undefined` by default, see https://docs.walletconnect.com/2.0/web3modal/options
-          //   // qrcodeModalOptions: {
-          //   //   mobileLinks: ['trust', 'metamask', 'coinbase', 'rainbow'],
-          //   //   desktopLinks: ['encrypted ink'],
-          //   // },
-          // })
-          // await test.connect({
-          //   chains: [1], // OPTIONAL chain ids
-          //   // rpcMap, // OPTIONAL rpc urls
-          //   // pairingTopic, // OPTIONAL pairing topic
-          // })
-          // or
-          // await provider.enable()
-          // addresses = provider?.accounts
-          // console.log(addresses)
-          // const WalletConnectProvider = await import('@walletconnect/web3-provider')
-          // const provider = new WalletConnectProvider({
-          //   infuraId: process.env.NEXT_PUBLIC_INFURA_ID,
-          //   qrcodeModalOptions: {
-          //     mobileLinks: ['trust', 'metamask', 'coinbase', 'rainbow'],
-          //     desktopLinks: ['encrypted ink'],
-          //   },
-          // })
-          // await provider.connect({
-          //   // chains, // OPTIONAL chain ids
-          //   // rpcMap, // OPTIONAL rpc urls
-          //   // pairingTopic // OPTIONAL pairing topic
-          // })
-          // await provider.enable()
-          // providerInstance = new ethers.providers.Web3Provider(provider)
-          // addresses = provider?.accounts
-          // subscribeProvider(provider)
+        } catch (error) {
+          alert('test1')
+          alert(error.message)
         }
 
-        if (addresses?.length === 0) {
-          throw new Error('Account is locked, or is not connected, or is in pending request.')
-        }
-        const promise = new Promise((resolve, reject) => {
-          let timeout = setTimeout(async function () {
-            try {
-              const signer = await providerInstance.getSigner()
-              const signature = await signer.signMessage(`${Enums.USER_SIGN_MSG}`).catch((err) => {
-                throw new Error('User rejects signing.')
-              })
-
-              if (signature && addresses[0] && signature) {
-                signIn('web3-wallet', {
-                  redirect: true,
-                  signature,
-                  wallet: addresses[0],
-                  callbackUrl: `${window.location.origin}`,
-                }).catch((error) => {
-                  reject(error.message)
-                })
-                clearTimeout(timeout)
-                resolve()
-              }
-              clearTimeout(timeout)
-              reject('Missing address or signature')
-            } catch (e) {
-              clearTimeout(timeout)
-              reject(e)
-            }
-          }, 800)
-        })
-
-        return promise
-      } catch (error) {
-        if (error.message.indexOf('user rejected signing') !== -1) {
-          throw new Error('User rejected signing')
-        } else {
-          console.log(error)
-          // throw error
-        }
+        // USE ETHEREUM PROVIDER HERE
+        // const ethereumProvider = await UniversalProvider.init({
+        //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
+        //   logger: 'debug',
+        //   relayUrl: 'wss://relay.walletconnect.com', //DEFAULT_RELAY_URL
+        // })
+        // const session = await ethereumProvider.connect({
+        //   namespaces: {
+        //     eip155: {
+        //       methods: [
+        //         'eth_sendTransaction',
+        //         'eth_signTransaction',
+        //         'eth_sign',
+        //         'personal_sign',
+        //         'eth_signTypedData',
+        //       ],
+        //       chains: ['eip155:80001'],
+        //       events: ['chainChanged', 'accountsChanged'],
+        //       rpcMap: {
+        //         80001: `https://rpc.walletconnect.com?chainId=eip155:80001&projectId=${process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID}`,
+        //       },
+        //     },
+        //   },
+        //   // pairingTopic: pairing?.topic,
+        // })
+        // const _accounts = await ethereumProvider.enable()
+        // const web3Provider = new ethers.providers.Web3Provider(provider)
+        // const _accounts = await ethereumProvider.enable()
+        // console.log('_accounts', _accounts)
+        // const test = await EthereumProvider.init({
+        //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID, // REQUIRED your projectId
+        //   chains: [1], // REQUIRED chain ids
+        //   showQrModal: false, // REQUIRED set to "true" to use @web3modal/standalone,
+        //   // methods, // OPTIONAL ethereum methods
+        //   // events, // OPTIONAL ethereum events
+        //   // rpcMap, // OPTIONAL rpc urls for each chain
+        //   // metadata, // OPTIONAL metadata of your app
+        //   // qrModalOptions, // OPTIONAL - `undefined` by default, see https://docs.walletconnect.com/2.0/web3modal/options
+        //   // qrcodeModalOptions: {
+        //   //   mobileLinks: ['trust', 'metamask', 'coinbase', 'rainbow'],
+        //   //   desktopLinks: ['encrypted ink'],
+        //   // },
+        // })
+        // await test.connect({
+        //   chains: [1], // OPTIONAL chain ids
+        //   // rpcMap, // OPTIONAL rpc urls
+        //   // pairingTopic, // OPTIONAL pairing topic
+        // })
+        // or
+        // await provider.enable()
+        // addresses = provider?.accounts
+        // console.log(addresses)
+        // const WalletConnectProvider = await import('@walletconnect/web3-provider')
+        // const provider = new WalletConnectProvider({
+        //   infuraId: process.env.NEXT_PUBLIC_INFURA_ID,
+        //   qrcodeModalOptions: {
+        //     mobileLinks: ['trust', 'metamask', 'coinbase', 'rainbow'],
+        //     desktopLinks: ['encrypted ink'],
+        //   },
+        // })
+        // await provider.connect({
+        //   // chains, // OPTIONAL chain ids
+        //   // rpcMap, // OPTIONAL rpc urls
+        //   // pairingTopic // OPTIONAL pairing topic
+        // })
+        // await provider.enable()
+        // providerInstance = new ethers.providers.Web3Provider(provider)
+        // addresses = provider?.accounts
+        // subscribeProvider(provider)
       }
-    },
-    [signClient],
-  )
+
+      if (addresses?.length === 0) {
+        throw new Error('Account is locked, or is not connected, or is in pending request.')
+      }
+      const promise = new Promise((resolve, reject) => {
+        let timeout = setTimeout(async function () {
+          try {
+            const signer = await providerInstance.getSigner()
+            const signature = await signer.signMessage(`${Enums.USER_SIGN_MSG}`).catch((err) => {
+              throw new Error('User rejects signing.')
+            })
+
+            if (signature && addresses[0] && signature) {
+              signIn('web3-wallet', {
+                redirect: true,
+                signature,
+                wallet: addresses[0],
+                callbackUrl: `${window.location.origin}`,
+              }).catch((error) => {
+                reject(error.message)
+              })
+              clearTimeout(timeout)
+              resolve()
+            }
+            clearTimeout(timeout)
+            reject('Missing address or signature')
+          } catch (e) {
+            clearTimeout(timeout)
+            reject(e)
+          }
+        }, 800)
+      })
+
+      return promise
+    } catch (error) {
+      if (error.message.indexOf('user rejected signing') !== -1) {
+        throw new Error('User rejected signing')
+      } else {
+        console.log(error)
+        // throw error
+      }
+    }
+  }
 
   const signUpWithWallet = useCallback(async (walletType) => {
     if (!walletType) {
