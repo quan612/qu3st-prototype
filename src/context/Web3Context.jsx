@@ -169,22 +169,27 @@ export function Web3WalletProvider({ session, children }) {
   }, [])
 
   const walletConnectSign = async () => {
-    const account = web3ModalSession.namespaces.eip155.accounts[0].split(':')[2]
-    let params = ['0xdeadbeaf', account]
-    let method = 'personal_sign'
+    try {
+      const account = sessionTemp.namespaces.eip155.accounts[0].split(':')[2]
+      alert(`account ${account}`)
+      let params = ['0xdeadbeaf', account]
+      let method = 'personal_sign'
 
-    const result = await signClient.request({
-      topic: web3ModalSession.topic,
-      chainId: 'eip155:1',
-      request: {
-        id: 1,
-        jsonrpc: '2.0',
-        method: method,
-        params: params,
-      },
-    })
+      const result = await signClient.request({
+        topic: web3ModalSession.topic,
+        chainId: 'eip155:1',
+        request: {
+          id: 1,
+          jsonrpc: '2.0',
+          method: method,
+          params: params,
+        },
+      })
 
-    alert(result)
+      alert(result)
+    } catch (error) {
+      alert(error.message)
+    }
   }
 
   const signInWithWallet = useCallback(
@@ -224,8 +229,6 @@ export function Web3WalletProvider({ session, children }) {
             // metadata: getAppMetadata() || DEFAULT_APP_METADATA,
           })
 
-          signClientSet(client)
-
           // setClient(signClient)
 
           // const core = new Core({
@@ -256,7 +259,7 @@ export function Web3WalletProvider({ session, children }) {
           //testing
           try {
             if (client) {
-              console.log(1111)
+              signClientSet(client)
               const namespaces = {
                 eip155: {
                   methods: ['personal_sign'],
@@ -277,8 +280,7 @@ export function Web3WalletProvider({ session, children }) {
                 web3ModalSessionSet(sessionTemp)
                 console.log('4')
                 console.log('sessionTemp', sessionTemp)
-                const account = sessionTemp.namespaces.eip155.accounts[0].split(':')[2]
-                alert(`account ${account}`)
+
                 // console.log('accounts', accounts)
                 web3Modal.closeModal()
 
