@@ -255,6 +255,7 @@ export function Web3WalletProvider({ session, children }) {
                 console.log('4')
                 console.log('session', session)
                 const accounts = session.namespaces.eip155.accounts[0]
+                alert(`account ${accounts}`)
                 console.log('accounts', accounts)
                 web3Modal.closeModal()
                 const result = await signClient.request({
@@ -275,6 +276,7 @@ export function Web3WalletProvider({ session, children }) {
               }
             }
           } catch (error) {
+            alert('test1')
             alert(error.message)
           }
 
