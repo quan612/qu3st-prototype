@@ -225,22 +225,7 @@ export function Web3WalletProvider({ session, children }) {
       } else if (walletType === Enums.WALLETCONNECT) {
         //TODO HERE
 
-        const client = await Client.init({
-          logger: 'debug', // DEFAULT_LOGGER,
-          relayUrl: 'wss://relay.walletconnect.com',
-          projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
-          // metadata: getAppMetadata() || DEFAULT_APP_METADATA,
-        })
-
-        const provider = await UniversalProvider.init({
-          projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
-          logger: 'debug',
-          relayUrl: 'wss://relay.walletconnect.com',
-        })
-
-        // signClientSet(client)
-        setEthereumProvider(provider)
-        signClientSet(provider.client)
+        signClientSet(client)
 
         // const core = new Core({
         //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
@@ -269,68 +254,33 @@ export function Web3WalletProvider({ session, children }) {
         // console.log(a)
         //testing
         try {
-          // if (client) {
-          //   // signClientSet(client)
-          //   const namespaces = {
-          //     eip155: {
-          //       methods: ['personal_sign'],
-          //       chains: ['eip155:1'],
-          //       events: ['accountsChanged, connect, disconnect'],
-          //     },
-          //   }
-          //   const { uri, approval } = await client.connect({
-          //     requiredNamespaces: namespaces,
-          //   })
-          //   if (uri) {
-          //     await web3Modal.openModal({
-          //       uri,
-          //       // standaloneChains: namespaces.eip155.chains,
-          //     })
-          //     // console.log('3')
-          //     const sessionTemp = await approval()
-          //     web3ModalSessionSet(sessionTemp)
-          //     // console.log('4')
-          //     // console.log('sessionTemp', sessionTemp)
-
-          //     // console.log('accounts', accounts)
-
-          //     client.pairing.getAll({ active: true })
-
-          //     web3Modal.closeModal()
-
-          //     return
-          //   }
-          // }
-          if (!provider) {
-            throw new ReferenceError('WalletConnect Client is not initialized.')
-          }
-
-          // const chainId = caipChainId.split(":").pop();
-
-          // console.log("Enabling EthereumProvider for chainId: ", chainId);
-
-          const pairings = provider.client.pairing.getAll({ active: true })
-          const session = await provider.connect({
-            namespaces: {
+          if (client) {
+            // signClientSet(client)
+            const namespaces = {
               eip155: {
-                methods: [
-                  // 'eth_sendTransaction',
-                  // 'eth_signTransaction',
-                  // 'eth_sign',
-                  'personal_sign',
-                  // 'eth_signTypedData',
-                ],
-                chains: [`eip155:1`],
-                events: ['chainChanged', 'accountsChanged'],
-                rpcMap: {},
+                methods: ['personal_sign'],
+                chains: ['eip155:1'],
+                events: ['accountsChanged, connect, disconnect'],
               },
-            },
-            pairingTopic: pairings[0]?.topic, //pairing?.topic,
-          })
+            }
+            const { uri, approval } = await client.connect({
+              requiredNamespaces: namespaces,
+            })
+            if (uri) {
+              await web3Modal.openModal({
+                uri,
+                standaloneChains: namespaces.eip155.chains,
+              })
 
-          // createWeb3Provider(ethereumProvider)
-          const _accounts = await ethereumProvider.enable()
-          console.log('_accounts', _accounts)
+              const sessionTemp = await approval()
+              web3ModalSessionSet(sessionTemp)
+              client.pairing.getAll({ active: true })
+
+              web3Modal.closeModal()
+
+              return
+            }
+          }
         } catch (error) {
           alert('test1')
           alert(error.message)
