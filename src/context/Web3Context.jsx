@@ -277,11 +277,11 @@ export function Web3WalletProvider({ session, children }) {
                   uri,
                   // standaloneChains: namespaces.eip155.chains,
                 })
-                console.log('3')
+                // console.log('3')
                 const sessionTemp = await approval()
                 web3ModalSessionSet(sessionTemp)
-                console.log('4')
-                console.log('sessionTemp', sessionTemp)
+                // console.log('4')
+                // console.log('sessionTemp', sessionTemp)
 
                 // console.log('accounts', accounts)
                 web3Modal.closeModal()
