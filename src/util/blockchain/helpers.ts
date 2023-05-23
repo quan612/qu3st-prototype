@@ -185,8 +185,8 @@ export const getBlockExplorerLink = (chain, network, transactionHash) => {
 }
 
 export const getRedeemContract = (signerWallet, redeemContractAddress) => {
-  const redeemContractJson = require('./redeem-contract.json')
-
+  // const redeemContractJson = require('./redeem-contract.json')
+  const redeemContractJson = ""
   return new ethers.Contract(
     utils.getAddress(redeemContractAddress),
     redeemContractJson,
