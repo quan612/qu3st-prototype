@@ -229,7 +229,7 @@ export function Web3WalletProvider({ session, children }) {
             // metadata: getAppMetadata() || DEFAULT_APP_METADATA,
           })
 
-          // setClient(signClient)
+          signClientSet(client)
 
           // const core = new Core({
           //   projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
@@ -259,7 +259,7 @@ export function Web3WalletProvider({ session, children }) {
           //testing
           try {
             if (client) {
-              signClientSet(client)
+              // signClientSet(client)
               const namespaces = {
                 eip155: {
                   methods: ['personal_sign'],
