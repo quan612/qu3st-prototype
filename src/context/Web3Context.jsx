@@ -224,7 +224,12 @@ export function Web3WalletProvider({ session, children }) {
         subscribeProvider(window.ethereum)
       } else if (walletType === Enums.WALLETCONNECT) {
         //TODO HERE
-
+        const client = await Client.init({
+          logger: 'debug', // DEFAULT_LOGGER,
+          relayUrl: 'wss://relay.walletconnect.com',
+          projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID,
+          // metadata: getAppMetadata() || DEFAULT_APP_METADATA,
+        })
         signClientSet(client)
 
         // const core = new Core({
