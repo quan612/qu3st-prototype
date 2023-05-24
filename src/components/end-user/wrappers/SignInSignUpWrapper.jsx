@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useContext } from 'react'
+import React, { useState, useCallback, useRef, useContext, useEffect } from 'react'
 import {
   Heading,
   Box,
@@ -15,6 +15,7 @@ import {
 import { WalletAuthQuestModal, WalletSignInModal } from '../shared'
 
 import {
+  CoreWalletIcon,
   DiscordIcon,
   GoogleIcon,
   MetamaskIcon,
@@ -37,7 +38,6 @@ import Enums from '@enums/index'
 import * as gtag from '@lib/ga/gtag'
 import PartnersSignInModal from '../shared/PartnersSignInModal'
 import { Web3Context } from '@context/Web3Context'
-import { useWeb3CoreWalletContext } from '@context/CoreWalletContext'
 
 const NON_EMAIL = 1
 const EMAIL = 2
@@ -52,6 +52,7 @@ export const SignInSignUpWrapper = ({ isSignIn = false }) => {
   const [view, setView] = useState(NON_EMAIL)
 
   const { signInCoreWallet } = useContext(Web3Context)
+
   // const { coreWalletConnector } = useWeb3CoreWalletContext()
 
   // const isActive = useIsActive()
@@ -144,7 +145,6 @@ export const SignInSignUpWrapper = ({ isSignIn = false }) => {
                 <Text>Discord</Text>
               </HStack>
             </Button>
-
             <Button
               onClick={async () => {
                 if (isSignIn) {
@@ -160,7 +160,7 @@ export const SignInSignUpWrapper = ({ isSignIn = false }) => {
                       label: 'Twitter signs up successfully',
                     })
                   }
-                  let twitterLink = await getTwitterAuthLink()
+                  const twitterLink = await getTwitterAuthLink()
                   return window.open(twitterLink, '_self')
                 }
               }}
@@ -172,7 +172,7 @@ export const SignInSignUpWrapper = ({ isSignIn = false }) => {
                 <Text>Twitter</Text>
               </HStack>
             </Button>
-            <Button
+            {/* <Button
               onClick={() => {
                 if (isSignIn) {
                   // signIn("google",{
@@ -200,7 +200,7 @@ export const SignInSignUpWrapper = ({ isSignIn = false }) => {
                 <GoogleIcon />
                 <Text>Google</Text>
               </HStack>
-            </Button>
+            </Button> */}
           </ButtonGroup>
           <ButtonGroup
             spacing={{ base: '12px', lg: '16px' }}
@@ -220,9 +220,10 @@ export const SignInSignUpWrapper = ({ isSignIn = false }) => {
                 <StarIcon /> <Text>Partners</Text>
               </HStack>
             </Button> */}
-            <Button
+            {/* <Button
               onClick={async () => {
                 if (isSignIn) {
+                  // connect({ connector: connectors[1] })
                   // walletSignInModal.onOpen()
                   signInCoreWallet()
                   // connector.activate().catch((e) => console.log(e))
@@ -236,7 +237,7 @@ export const SignInSignUpWrapper = ({ isSignIn = false }) => {
               <HStack>
                 <MetamaskIcon /> <Text>Core Wallet</Text>
               </HStack>
-            </Button>
+            </Button> */}
 
             <Button
               onClick={() => {
@@ -251,6 +252,26 @@ export const SignInSignUpWrapper = ({ isSignIn = false }) => {
             >
               <HStack>
                 <MetamaskIcon /> <Text>Wallet</Text>
+              </HStack>
+            </Button>
+
+            <Button
+              onClick={() => {
+                if (isSignIn) {
+                  // walletSignInModal.onOpen()
+                } else {
+                  // walletSignUpModal.onOpen()
+                }
+              }}
+              disabled={true}
+              variant="core-wallet"
+              w={'47%'}
+            >
+              <HStack>
+                <Box boxSize="24px">
+                  <CoreWalletIcon />
+                </Box>
+                <Text>Core Wallet</Text>
               </HStack>
             </Button>
           </ButtonGroup>

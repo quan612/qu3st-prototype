@@ -20,11 +20,14 @@ import { useRouter } from 'next/router'
 import { MetamaskIcon, WalletConnectIcon } from '@components/shared/Icons'
 import ModalWrapper from '../wrappers/ModalWrapper'
 import * as gtag from '@lib/ga/gtag'
+import useWalletConnect from '@hooks/useWalletConnect'
+import { HeadingLg } from '@components/shared/Typography'
 
 const CONNECTABLE = 1
 const AUTHENTICATING = 2
-const AUTHENTICATED = 3
-const ERROR = 4
+const SIGNING = 3
+const AUTHENTICATED = 4
+const ERROR = 5
 
 const WalletAuthQuestModal = ({ isOpen, onClose, isSignUp = false }) => {
   const router = useRouter()
@@ -35,37 +38,54 @@ const WalletAuthQuestModal = ({ isOpen, onClose, isSignUp = false }) => {
 
   const [walletAuthQuestData, isSubmittingQuest, walletAuthQuestSubmit] = useWalletAuthQuestSubmit()
 
-  useEffect(() => {}, [])
+  const { handleOnConnect, handleOnSign } = useWalletConnect()
 
-  async function handleConnect(type) {
+  useEffect(() => {
+    const walletConnectCache = localStorage.getItem('walletconnect')
+    if (walletConnectCache) {
+      localStorage.removeItem('walletconnect')
+    }
+    const walletMobileCache = localStorage.getItem('WALLETCONNECT_DEEPLINK_CHOICE')
+    if (walletMobileCache) {
+      localStorage.removeItem('WALLETCONNECT_DEEPLINK_CHOICE')
+    }
+  }, [])
+
+  async function handleOnSignUp(type) {
     setView(AUTHENTICATING)
     try {
-      let payload = await signUpWithWallet(type).catch((err) => {
-        throw err
-      })
-
-      if (typeof window !== 'undefined' && window.gtag) {
-        console.log('Wallet sign up tracked')
-        gtag.event({
-          action: 'sign_up_success',
-          method: Enums.WALLET,
-          label: 'Wallet signs up successfully',
-        })
-      }
-
-      let res = await walletAuthQuestSubmit(payload).catch((err) => {
-        throw err
-      })
-      //   console.log("res", res);
-      if (!res.isError) {
-        if (isSignUp) {
-          await signInWithWallet(type, payload)
-        } else {
-          setView(AUTHENTICATED)
-        }
+      let payload
+      if (type === Enums.WALLETCONNECT) {
+        handleOnConnect()
+        setView(SIGNING)
       } else {
-        errorSet(res.message)
-        setView(ERROR)
+        payload = await signUpWithWallet(type).catch((err) => {
+          throw err
+        })
+
+        if (typeof window !== 'undefined' && window.gtag) {
+          console.log('Wallet sign up tracked')
+          gtag.event({
+            action: 'sign_up_success',
+            method: Enums.WALLET,
+            label: 'Wallet signs up successfully',
+          })
+        }
+
+        let res = await walletAuthQuestSubmit(payload).catch((err) => {
+          throw err
+        })
+        //   console.log("res", res);
+        if (!res.isError) {
+          if (isSignUp) {
+            await signInWithWallet(type, payload)
+          } else {
+            setView(AUTHENTICATED)
+          }
+        } else {
+          errorSet(res.message)
+          setView(ERROR)
+        }
       }
     } catch (error) {
       errorSet(error.message)
@@ -89,7 +109,7 @@ const WalletAuthQuestModal = ({ isOpen, onClose, isSignUp = false }) => {
 
           <Button
             variant="wallet"
-            onClick={() => handleConnect(Enums.METAMASK)}
+            onClick={() => handleOnSignUp(Enums.METAMASK)}
             minW="100%"
             borderRadius="24px"
             size="lg"
@@ -102,7 +122,7 @@ const WalletAuthQuestModal = ({ isOpen, onClose, isSignUp = false }) => {
 
           <Button
             variant="twitter"
-            onClick={() => handleConnect(Enums.WALLETCONNECT)}
+            onClick={() => handleOnSignUp(Enums.WALLETCONNECT)}
             minW="100%"
             borderRadius="24px"
             size="lg"
@@ -136,6 +156,36 @@ const WalletAuthQuestModal = ({ isOpen, onClose, isSignUp = false }) => {
             w="100%"
           >
             Back
+          </Button>
+        </>
+      )}
+      {currentView === SIGNING && (
+        <>
+          <HeadingLg>Sign to validate</HeadingLg>
+          <Button
+            variant="blue"
+            onClick={async () => {
+              const { address, signature } = await handleOnSign()
+              const res = await walletAuthQuestSubmit({ address, signature }).catch((err) => {
+                throw err
+              })
+
+              if (!res.isError) {
+                if (isSignUp) {
+                  await signInWithWallet(Enums.WALLETCONNECT, { address, signature })
+                } else {
+                  setView(AUTHENTICATED)
+                }
+              } else {
+                errorSet(res.message)
+                setView(ERROR)
+              }
+            }}
+            minW="100%"
+            borderRadius="24px"
+            w="100%"
+          >
+            Sign
           </Button>
         </>
       )}

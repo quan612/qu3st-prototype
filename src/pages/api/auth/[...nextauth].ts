@@ -12,7 +12,7 @@ import Enums from 'enums'
 import DiscordProvider from 'next-auth/providers/discord'
 import TwitterProvider from 'next-auth/providers/twitter'
 import { getConfig, getVariableConfig } from 'repositories/config'
-import { validateEmail } from 'util/index'
+import { shortenAddress, validateEmail } from 'util/index'
 
 const bcrypt = require('bcrypt')
 const { NEXTAUTH_SECRET } = process.env
@@ -22,7 +22,7 @@ import { getIsSMSVerificationRequired } from 'repositories/user'
 import verifyUathLogin from '@util/verifyUathLogin'
 import { Authorization } from '@uauth/js'
 
-// const allConfig: QuestVariables = await getConfig();
+const allConfig: QuestVariables = await getConfig();
 
 export const authOptions = {
   providers: [
@@ -42,7 +42,7 @@ export const authOptions = {
       },
       authorize: async (credentials, req) => {
         const { wallet, signature } = credentials
-
+        
         if (!wallet || !signature) throw new Error('Missing wallet or signature')
 
         if (utils.getAddress(wallet) && !utils.isAddress(wallet))
@@ -57,6 +57,7 @@ export const authOptions = {
           signature: signature.trim(),
         })
 
+        console.log(originalAddress)
         if (originalAddress.toLowerCase() !== wallet.toLowerCase())
           throw new Error('Signature verification failed')
 
@@ -156,16 +157,16 @@ export const authOptions = {
     }),
     DiscordProvider({
       /* default should be [origin]/api/auth/callback/[provider] ~ https://next-auth.js.org/configuration/providers/oauth */
-      // clientId: allConfig?.discordId,//await getVariableConfig('discordId'),
-      // clientSecret: allConfig?.discordSecret,//await getVariableConfig('discordSecret'),
-      clientId: await getVariableConfig('discordId'),//,
-      clientSecret: await getVariableConfig('discordSecret'),//,
+      clientId: allConfig?.discordId,//await getVariableConfig('discordId'),
+      clientSecret: allConfig?.discordSecret,//await getVariableConfig('discordSecret'),
+      // clientId: await getVariableConfig('discordId'),//,
+      // clientSecret: await getVariableConfig('discordSecret'),//,
     }),
     TwitterProvider({
-      // clientId: allConfig?.twitterId,
-      // clientSecret: allConfig?.twitterSecret,
-      clientId: await getVariableConfig('twitterId'),//await getVariableConfig('twitterId'),
-      clientSecret:await getVariableConfig('twitterSecret'),//await getVariableConfig('twitterSecret'),
+      clientId: allConfig?.twitterId,
+      clientSecret: allConfig?.twitterSecret,
+      // clientId: await getVariableConfig('twitterId'),
+      // clientSecret:await getVariableConfig('twitterSecret'),
       version: '2.0',
     }),
   ],
@@ -234,7 +235,7 @@ export const authOptions = {
         return true
       }
       if (user?.account?.provider === 'web3-wallet') {
-        const wallet = user.user.wallet
+        const wallet = user?.user?.wallet
         const existingUser = await prisma.whiteList.findFirst({
           where: {
             wallet: { equals: wallet, mode: 'insensitive' },
@@ -242,7 +243,7 @@ export const authOptions = {
         })
 
         if (!existingUser) {
-          const error = `Wallet account ${wallet} not found in our database.`
+          const error = `Wallet account ${shortenAddress(wallet)} not found in our database.`
           return `/quest-redirect?error=${error}`
         }
         if (existingUser.status === AccountStatus.PENDING && isSMSVerificationRequired) {

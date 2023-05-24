@@ -6,8 +6,9 @@ import { bufferToHex } from 'ethereumjs-util'
 import { getQuestByTypeId, getQuestType } from 'repositories/quest'
 import { updateUserWalletTransaction } from 'repositories/transactions'
 import { isWhiteListUser } from 'repositories/session-auth'
-import { getSession } from 'next-auth/react'
 import { signUpRateLimit } from '@middlewares/applyRateLimit'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../auth/[...nextauth]'
 
 export default async function walletSignUp(req, res) {
   const { method } = req
@@ -15,15 +16,10 @@ export default async function walletSignUp(req, res) {
   switch (method) {
     case 'POST':
       try {
+        await signUpRateLimit(req, res)
         const { address, signature } = req.body
-
-        const session = await getSession({ req })
-        let whiteListUser = await isWhiteListUser(session)
-
-        // let checkMessage = await checkRequest(req, res)
-        // if (checkMessage !== "") {
-        //     return res.status(200).json({ isError: true, message: checkMessage });
-        // }
+        const session = await getServerSession(req, res, authOptions)
+        const whiteListUser = await isWhiteListUser(session)
 
         if (!signature || !address) {
           return res.status(200).json({
@@ -32,26 +28,26 @@ export default async function walletSignUp(req, res) {
           })
         }
 
-        let walletAuthQuestType = await getQuestType(Enums.WALLET_AUTH)
+        const walletAuthQuestType = await getQuestType(Enums.WALLET_AUTH)
         if (!walletAuthQuestType) {
-          let error = 'Cannot find quest type Wallet Auth. Missing Quest Type config.'
+          const error = 'Cannot find quest type Wallet Auth. Missing Quest Type config.'
           return res.status(200).json({
             isError: true,
             message: error,
           })
         }
 
-        let walletAuthQuest = await getQuestByTypeId(walletAuthQuestType.id)
+        const walletAuthQuest = await getQuestByTypeId(walletAuthQuestType.id)
         if (!walletAuthQuest) {
-          let error = 'Cannot find quest associated with Wallet Auth yet.'
+          const error = 'Cannot find quest associated with Wallet Auth yet.'
           return res.status(200).json({
             isError: true,
             message: error,
           })
         }
 
-        let wallet = utils.getAddress(address)
-        let isValid = utils.isAddress(address)
+        const wallet = utils.getAddress(address)
+        const isValid = utils.isAddress(address)
         if (!wallet || !isValid) {
           return res.status(200).json({
             isError: true,
@@ -59,7 +55,6 @@ export default async function walletSignUp(req, res) {
           })
         }
 
-        //recover the address from signature here to ensure only one address can sign up with no replay attack
         const msg = `${Enums.USER_SIGN_MSG}`
         const msgBufferHex = bufferToHex(Buffer.from(msg, 'utf8'))
 
@@ -70,7 +65,7 @@ export default async function walletSignUp(req, res) {
         if (originalAddress.toLowerCase() !== address.toLowerCase())
           return res.status(200).json({ isError: true, message: 'Invalid signature.' })
 
-        let existingUser = await prisma.whiteList.findUnique({
+        const existingUser = await prisma.whiteList.findUnique({
           where: { wallet },
         })
 
@@ -83,8 +78,6 @@ export default async function walletSignUp(req, res) {
 
         await updateUserWalletTransaction(walletAuthQuest.questId, whiteListUser?.userId, wallet)
 
-        await signUpRateLimit(req, res)
-        // await trackRequest(req)
         return res.status(200).json({ message: 'Link wallet successfully.' })
       } catch (error) {
         console.log(error)
@@ -119,7 +112,6 @@ const trackRequest = async (req) => {
 
 const blockedUserAgentArr = [
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36',
-  //"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
 ]
 
 const blockIPArr = ['103.152.220.44']
@@ -131,11 +123,6 @@ const checkRequest = async (req, res) => {
   const forwarded = req.headers['x-forwarded-for']
   const userAgent = headers['user-agent']
 
-  // if (blockedUserAgentArr.includes(userAgent)) {
-  //     let message = "User Agent blacklist"
-  //     console.log(message)
-  //     return message
-  // }
   const ip = forwarded ? forwarded.split(/, /)[0] : req.connection.remoteAddress
 
   if (blockIPArr.includes(ip)) {

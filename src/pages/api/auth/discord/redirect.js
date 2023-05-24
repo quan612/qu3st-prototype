@@ -1,11 +1,13 @@
 import { prisma } from '@context/PrismaContext'
 import axios from 'axios'
 import url from 'url'
-import { getSession } from 'next-auth/react'
+
 import Enums from 'enums'
 import { isWhiteListUser } from 'repositories/session-auth'
 import { getQuestType, getQuestByTypeId } from 'repositories/quest'
 import { updateDiscordUserQuestTransaction } from 'repositories/transactions'
+import { authOptions } from '../[...nextauth]'
+import { getServerSession } from 'next-auth'
 
 const TOKEN_DISCORD_AUTH_URL = 'https://discord.com/api/oauth2/token'
 const USERINFO_DISCORD_AUTH_URL = 'https://discord.com/api/users/@me'
@@ -17,9 +19,8 @@ export default async function discordRedirect(req, res) {
   switch (method) {
     case 'GET':
       try {
-        const session = await getSession({ req })
-        console.log("discord redirect runnning")
-        let whiteListUser = await isWhiteListUser(session)
+        const session = await getServerSession(req, res, authOptions)
+        const whiteListUser = await isWhiteListUser(session)
 
         const { code } = req.query
         if (!code) {
@@ -27,10 +28,10 @@ export default async function discordRedirect(req, res) {
           return res.status(200).redirect(`/quest-redirect?error=${error}`)
         }
 
-        let allConfigs = await prisma.questVariables.findFirst()
-        let discordId = allConfigs?.discordId
-        let discordSecret = allConfigs?.discordSecret
-        let hostUrl = allConfigs.hostUrl
+        const allConfigs = await prisma.questVariables.findFirst()
+        const discordId = allConfigs?.discordId
+        const discordSecret = allConfigs?.discordSecret
+        const hostUrl = allConfigs.hostUrl
 
         if (!discordId || !discordSecret || hostUrl.trim().length < 1) {
           let error = 'Missing Server Configuration. Please contact the administrator.'

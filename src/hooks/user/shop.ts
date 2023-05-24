@@ -36,48 +36,12 @@ export const useOffChainShopItemRedeemMutation = () => {
   return [data, isLoading, mutateAsync]
 }
 
-export const useOnChainShopItemRedeemMutation = () => {
+export const useOnChainRedeemMutation = () => {
   const queryClient = useQueryClient()
 
   const { data, error, isError, isLoading, isSuccess, mutate, mutateAsync } = useMutation(
     (payload) => {
       return axios.post(`${Enums.BASEPATH}/api/user/reward/shop/on-chain-redeem`, payload).then((r) => r.data)
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(SHOP_ITEM_QUERY);
-        queryClient.invalidateQueries(QUERY_USER_REWARD);
-      },
-    },
-  )
-
-  return [data, isLoading, mutateAsync]
-}
-
-export const useERC1155RedeemMutation = () => {
-  const queryClient = useQueryClient()
-
-  const { data, error, isError, isLoading, isSuccess, mutate, mutateAsync } = useMutation(
-    (payload) => {
-      return axios.post(`${Enums.BASEPATH}/api/user/reward/shop/erc1155-redeem`, payload).then((r) => r.data)
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(SHOP_ITEM_QUERY);
-        queryClient.invalidateQueries(QUERY_USER_REWARD);
-      },
-    },
-  )
-
-  return [data, isLoading, mutateAsync]
-}
-
-export const useAvaxRedeemMutation = () => {
-  const queryClient = useQueryClient()
-
-  const { data, error, isError, isLoading, isSuccess, mutate, mutateAsync } = useMutation(
-    (payload) => {
-      return axios.post(`${Enums.BASEPATH}/api/user/reward/shop/avalanche-redeem`, payload).then((r) => r.data)
     },
     {
       onSuccess: () => {

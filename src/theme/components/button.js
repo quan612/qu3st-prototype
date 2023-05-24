@@ -176,6 +176,52 @@ export const buttonStyles = {
             color: 'brand.blue',
           },
         }),
+        "core-wallet": (props) => ({
+          borderColor: 'transparent',
+          bg: 'black',
+          color: '#fff',
+          _hover: {
+            transition: '0.8s',
+            bg: '#fff',
+            color: 'black',
+            svg: {
+              fill: 'black',
+              transition: '0.8s',
+            },
+            _disabled: {
+              bg: 'black',
+              color: '#fff',
+              opacity: 0.4,
+              svg: {
+                fill: 'white',
+                transition: '0.8s',
+              },
+            },
+
+          },
+          _disabled: {
+            opacity: 0.4,
+          },
+          _focus: {
+            transition: '0.8s',
+            bg: '#fff',
+            color: 'black',
+            _disabled: {
+              bg: 'black',
+              color: '#fff',
+              opacity: 0.4,
+            },
+            svg: {
+              fill: 'white',
+              transition: '0.8s',
+            },
+          },
+          _active: {
+            bg: '#fff',
+            borderColor: 'black',
+            color: 'black',
+          },
+        }),
 
         cyan: (props) => ({
           borderColor: 'transparent',

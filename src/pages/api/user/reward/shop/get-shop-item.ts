@@ -37,6 +37,7 @@ const handler = async (req: WhiteListApiRequest, res: NextApiResponse) => {
         shop.redeemAvailable = redeemSlotAvailable.length;
         delete shop.shopItemRedeem;
         delete shop.abi;
+        // console.log(shop)
         return shop;
       }))
     }

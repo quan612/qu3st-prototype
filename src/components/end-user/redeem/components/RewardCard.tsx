@@ -8,10 +8,8 @@ import { RiftlyIcon } from '@components/shared/Icons'
 
 // Hooks
 import {
-  useAvaxRedeemMutation,
-  useERC1155RedeemMutation,
+  useOnChainRedeemMutation,
   useOffChainShopItemRedeemMutation,
-  useOnChainShopItemRedeemMutation,
 } from '@hooks/user/shop'
 
 // Types
@@ -27,15 +25,13 @@ interface IRewardCard {
 
 const RewardCard = ({ image, item }: IRewardCard) => {
   const toast = useToast()
-  const { title, description, cost, redeemAvailable } = item
+
+  const { title, description, cost, redeemAvailable, isRedeemable } = item
 
   const [offchainRedeemData, isRedeemingOffchain, offChainRedeemAsync] =
     useOffChainShopItemRedeemMutation()
-  const [onchainRedeemData, isRedeemingOnchain, onChainRedeemAsync] =
-    useOnChainShopItemRedeemMutation()
 
-  const [erc1155RedeemData, isRedeemingERC1155, erc1155RedeemAsync] = useERC1155RedeemMutation()
-  const [avaxRedeemData, isRedeemingAvax, avaxRedeemAsync] = useAvaxRedeemMutation()
+  const [onchainRedeemData, isRedeemingOnChain, onchainRedeemAsync] = useOnChainRedeemMutation()
   const handleRedeem = useCallback(async (item) => {
     const { itemType, id, title, contractType, chain, network } = item
 
@@ -48,7 +44,7 @@ const RewardCard = ({ image, item }: IRewardCard) => {
           break
         case ItemType.ONCHAIN:
           // if()
-          res = await avaxRedeemAsync({ id })
+          res = await onchainRedeemAsync({ id })
           // if (contractType === ContractType.ERC1155) {
           //   res = await erc1155RedeemAsync({ id })
           // } else {
@@ -115,7 +111,7 @@ const RewardCard = ({ image, item }: IRewardCard) => {
     }
   }, [])
 
-  const isLoading = isRedeemingOffchain || isRedeemingOnchain || isRedeemingERC1155
+  const isLoading = isRedeemingOffchain  || isRedeemingOnChain
 
   return (
     <Box
@@ -140,10 +136,11 @@ const RewardCard = ({ image, item }: IRewardCard) => {
               </HeadingSm>
 
               <TextSm color="whiteAlpha.700" opacity="0.64" fontWeight="400" noOfLines={2}>
+                    {/* {description} */}
                 {description}
               </TextSm>
               <TextSm color="white" noOfLines={2} fontStyle="italic">
-                {/* {description} */}
+            
                 Available: {redeemAvailable}
               </TextSm>
             </Flex>
@@ -160,7 +157,7 @@ const RewardCard = ({ image, item }: IRewardCard) => {
             </Flex>
 
             <Button
-              disabled={isLoading}
+              disabled={isLoading || !isRedeemable}
               isLoading={isLoading}
               onClick={() => handleRedeem(item)}
               variant="blue"

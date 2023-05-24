@@ -12,7 +12,7 @@ const whitelistUserMiddleware = (handler) => {
         isError: true,
       })
     }
-    let whiteListUser = await isWhiteListUser(session)
+    const whiteListUser = await isWhiteListUser(session)
     if (!whiteListUser) {
       return res.status(200).json({
         message: 'Not authenticated for user route',

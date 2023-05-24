@@ -16,6 +16,54 @@ import UserLayout from '@components/end-user/UserLayout'
 
 import { Web3WalletProvider } from '@context/Web3Context'
 import { CoreWalletProvider } from '@context/CoreWalletContext'
+
+import { chain, configureChains, createClient, WagmiConfig, defaultChains, mainnet, goerli } from "wagmi";
+import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
+import { InjectedConnector } from 'wagmi/connectors/injected'
+import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
+import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
+import { infuraProvider } from "wagmi/providers/infura";
+
+const { chains, provider } = configureChains(
+  process.env.NEXT_PUBLIC_CHAIN_ID === "1" ? [mainnet] : [goerli],
+  [infuraProvider({ apiKey: process.env.NEXT_PUBLIC_INFURA_ID }),
+    // publicProvider()
+  ],
+)
+
+const connectors = [
+  // new InjectedConnector({
+  //   chains,
+  //   options: {
+  //     name: 'Injected',
+  //     shimDisconnect: true,
+  //   },
+  // }),
+  // new MetaMaskConnector({ chains }),
+  // new CoinbaseWalletConnector({
+  //   chains,
+  //   options: {
+  //     appName: 'wagmi',
+  //   },
+  // }),
+  new WalletConnectConnector({
+    chains,
+    options: {
+      qrcode: true,
+      projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECTID
+    },
+  }),
+
+]
+
+
+const wagmiClient = createClient({
+  autoConnect: false,
+  connectors,
+  provider,
+});
+
+
 export function reportWebVitals(metric) {
   // console.log(metric);
 }
@@ -54,16 +102,18 @@ function MyApp({ Component, pageProps }) {
       refetchInterval={86400} // Re-fetches session when window is focused
       refetchOnWindowFocus={false}
     >
-      <CoreWalletProvider>
-        <Web3WalletProvider session={pageProps.session}>
-          <QueryClientProvider client={queryClient}>
-            <StrictMode>
-              <Script
-                strategy="lazyOnload"
-                src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
-              />
-              <Script strategy="lazyOnload">
-                {`
+      <WagmiConfig client={wagmiClient}>
+        <CoreWalletProvider>
+
+          <Web3WalletProvider session={pageProps.session}>
+            <QueryClientProvider client={queryClient}>
+              <StrictMode>
+                <Script
+                  strategy="lazyOnload"
+                  src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
+                />
+                <Script strategy="lazyOnload">
+                  {`
                                 window.dataLayer = window.dataLayer || [];
                                 function gtag(){dataLayer.push(arguments);}
                                 gtag('js', new Date());
@@ -71,19 +121,21 @@ function MyApp({ Component, pageProps }) {
                                 page_path: window.location.pathname, 'debug_mode':true
                                 });
                             `}
-              </Script>
-              <ChakraProvider theme={theme}>
-                <UserLayout {...pageProps}>
-                  <AnimatePresence mode="wait" initial={false} transitionDuration="0.2s">
-                    <Component {...pageProps} key={router.asPath} />
-                  </AnimatePresence>
-                  <Analytics />
-                </UserLayout>
-              </ChakraProvider>
-            </StrictMode>
-          </QueryClientProvider>
-        </Web3WalletProvider>
-      </CoreWalletProvider>
+                </Script>
+                <ChakraProvider theme={theme}>
+                  <UserLayout {...pageProps}>
+                    <AnimatePresence mode="wait" initial={false} transitionDuration="0.2s">
+                      <Component {...pageProps} key={router.asPath} />
+                    </AnimatePresence>
+                    <Analytics />
+                  </UserLayout>
+                </ChakraProvider>
+              </StrictMode>
+            </QueryClientProvider>
+          </Web3WalletProvider>
+
+        </CoreWalletProvider>
+      </WagmiConfig>
     </SessionProvider>
   )
 }
